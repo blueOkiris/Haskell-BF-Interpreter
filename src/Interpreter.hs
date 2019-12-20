@@ -5,8 +5,14 @@ import Data.ByteString.Char8(unpack)
 import Debug.Trace(trace)
 import Text.Read(readMaybe)
 import Data.Char(chr, showLitChar)
+import System.IO.Unsafe(unsafePerformIO)
 
 import Loop(LoopPair(..), getLoopPairs, printPairs)
+
+{-# NOINLINE readIntUnsafe #-}
+readIntUnsafe :: Int -> Int
+readIntUnsafe def =
+    maybe def id $ readMaybe (unsafePerformIO $! getLine)
 
 interpretBF :: [Char] -> [LoopPair] -> Int -> [Int] -> Int -> [IO()] -> [IO()]
 interpretBF byteList loops pointer memory index instList =
@@ -39,10 +45,10 @@ interpretBF byteList loops pointer memory index instList =
                                     ++ (snd $ splitAt (newPointer + 1) memory)
                     else if byteList !! index == ',' then
                         if newPointer >= length memory then
-                            memory ++ [ maybe 0 id $ readMaybe "7" ]
+                            memory ++ [ readIntUnsafe 0 ]
                         else
                             (fst $ splitAt pointer memory) 
-                                ++ [ maybe 0 id $ readMaybe "7" ] 
+                                ++ [ readIntUnsafe 0 ] 
                                     ++ (snd $ splitAt (newPointer + 1) memory)
                     else
                         if newPointer >= length memory then
