@@ -22,8 +22,8 @@ interpretBF cmds cmdIndex state =
     else if cmds !! cmdIndex == ',' then
         do
             memValueStr <- getLine
-            let memValue = maybe 0 id $ readMaybe memValueStr
-            interpretBF cmds newIndex $
+            let memValue = maybe 178 id $! readMaybe memValueStr
+            interpretBF cmds newIndex $!
                 state   { pointer = newPointer
                         , memory =
                             if newPointer >= length newMemory then
@@ -32,7 +32,8 @@ interpretBF cmds cmdIndex state =
                                 (fst $ splitAt newPointer newMemory) ++ [ memValue ] ++ (snd $ splitAt (newPointer + 1) newMemory) }
     else if cmds !! cmdIndex == '.' then
         do
-            putStr $! "" ++ [ chr (newMemory !! newPointer) ]
+            -- Execute immediately
+            id $! putStr $ show (newMemory !! newPointer)--[ chr (newMemory !! newPointer) ]
             interpretBF cmds newIndex $
                 state   { pointer = newPointer
                         , memory = newMemory }
