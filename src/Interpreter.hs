@@ -8,12 +8,78 @@ import Data.Char(chr, showLitChar)
 import System.IO.Unsafe(unsafePerformIO)
 
 import Loop(LoopPair(..), getLoopPairs, printPairs)
+import BFCmd(StateMachine(..))
 
-{-# NOINLINE readIntUnsafe #-}
-readIntUnsafe :: Int -> Int
-readIntUnsafe def =
-    maybe def id $ readMaybe (unsafePerformIO $! getLine)
+--{-# NOINLINE readIntUnsafe #-}
+--readIntUnsafe :: Int -> Int
+--readIntUnsafe def =
+--    maybe def id $ readMaybe (unsafePerformIO $! getLine)
 
+interpretBF :: [Char] -> Int -> StateMachine -> IO()
+interpretBF cmds cmdIndex state =
+    if cmdIndex == length cmds then
+        return ()
+    else if cmds !! cmdIndex == ',' then
+        do
+            memValueStr <- getLine
+            let memValue = maybe 0 id $ readMaybe memValueStr
+            interpretBF cmds newIndex $
+                state   { pointer = newPointer
+                        , memory =
+                            if newPointer >= length newMemory then
+                                newMemory ++ [ memValue ]
+                            else
+                                (fst $ splitAt newPointer newMemory) ++ [ memValue ] ++ (snd $ splitAt (newPointer + 1) newMemory) }
+    else if cmds !! cmdIndex == '.' then
+        do
+            putStr $! "" ++ [ chr (newMemory !! newPointer) ]
+            interpretBF cmds newIndex $
+                state   { pointer = newPointer
+                        , memory = newMemory }
+    else if (cmds !! cmdIndex) == '+' || (cmds !! cmdIndex) == '-'
+        || (cmds !! cmdIndex) == '>' || (cmds !! cmdIndex) == '<' then
+            interpretBF cmds newIndex $
+                state   { pointer = newPointer
+                        , memory =  newMemory }
+    else
+        interpretBF cmds newIndex state
+    where
+        newPointer =
+            if cmds !! cmdIndex == '>' then
+                (pointer state) + 1
+            else if cmds !! cmdIndex == '<' && (pointer state) > 0 then
+                (pointer state) - 1
+            else
+                (pointer state)
+        
+        newMemory = if cmds !! cmdIndex == '+' then
+                        if newPointer >= length (memory state) then
+                            (memory state) ++ [1]
+                        else
+                            (fst $ splitAt newPointer (memory state)) 
+                                ++ [ (((memory state) !! newPointer) + 1) ] 
+                                    ++ (snd $ splitAt (newPointer + 1) (memory state))
+                    else if cmds !! cmdIndex == '-' then
+                        if newPointer >= length (memory state) then
+                            (memory state) ++ [-1]
+                        else
+                            (fst $ splitAt (pointer state) (memory state)) 
+                                ++ [ (((memory state) !! newPointer) - 1) ]
+                                    ++ (snd $ splitAt (newPointer + 1) (memory state))
+                    else
+                        if newPointer >= length (memory state) then
+                            (memory state) ++ [0]
+                        else
+                            (memory state)
+        currLoopPairL = filter (\loop -> (leftBracketIndex loop) == cmdIndex) (loops state)
+        currLoopPairR = filter (\loop -> (rightBracketIndex loop) == cmdIndex) (loops state)
+        newIndex =  if cmds !! cmdIndex == '[' && newMemory !! newPointer == 0 then
+                        (rightBracketIndex (currLoopPairL !! 0)) + 1
+                    else if cmds !! cmdIndex == ']' && newMemory !! newPointer /= 0 then
+                        leftBracketIndex (currLoopPairR !! 0)
+                    else
+                        cmdIndex + 1
+{-
 interpretBF :: [Char] -> [LoopPair] -> Int -> [Int] -> Int -> [IO()] -> [IO()]
 interpretBF byteList loops pointer memory index instList =
     if index == (length byteList) then
@@ -28,6 +94,13 @@ interpretBF byteList loops pointer memory index instList =
                         pointer - 1
                     else
                         pointer
+        
+        userInput = if byteList !! index == ',' then
+                        (do
+                            str <- getLine
+                            return str)
+                    else
+                        ""
 
         newMemory = if byteList !! index == '+' then
                         if newPointer >= length memory then
@@ -45,10 +118,10 @@ interpretBF byteList loops pointer memory index instList =
                                     ++ (snd $ splitAt (newPointer + 1) memory)
                     else if byteList !! index == ',' then
                         if newPointer >= length memory then
-                            memory ++ [ readIntUnsafe 0 ]
+                            memory ++ [ maybe 0 id $! readMaybe userInput ]
                         else
                             (fst $ splitAt pointer memory) 
-                                ++ [ readIntUnsafe 0 ] 
+                                ++ [ maybe 0 id $! readMaybe userInput ] 
                                     ++ (snd $ splitAt (newPointer + 1) memory)
                     else
                         if newPointer >= length memory then
@@ -79,12 +152,15 @@ executeBFInstructions index instList =
         do
             (instList !! index)
             executeBFInstructions (index + 1) instList
-
+-}
 runBFInterpreter :: ByteString -> IO()
 runBFInterpreter bfFile =
-    executeBFInstructions 0 $! outputs
+    outputs
     where
         programData = unpack bfFile
-        loops = getLoopPairs programData
+        progLoops = getLoopPairs programData
         --printLoops = trace (printPairs 0 loops) loops
-        outputs = interpretBF programData loops 0 [0] 0 []
+        outputs = interpretBF programData 0 $
+                    StateMachine    { pointer = 0
+                                    , memory =  [0]
+                                    , loops = progLoops }
