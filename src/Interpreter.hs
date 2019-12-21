@@ -60,7 +60,7 @@ intCmdNoIO state =
 execBFCode :: StateMachine -> IO()
 execBFCode state =
     if cmdIndex state == length (program state) then
-        putStrLn "\nDone."
+        return ()
     else if currCmd state == ',' then
         do
             input <- getLine
