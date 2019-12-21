@@ -1,4 +1,4 @@
-module Loop(getLoopPairs, LoopPair(..), printPairs) where
+module Loop(getLoopPairs, LoopPair(..), printPairs, showLoops) where
 
 -- This module finds and pairs all the left and right brackets for easier jumping
 
@@ -7,6 +7,10 @@ import Debug.Trace
 data LoopPair =
     LoopPair    { leftBracketIndex  :: Int
                 , rightBracketIndex :: Int }
+
+showLoops :: [LoopPair] -> String
+showLoops loops =
+    show (map (\lp -> (leftBracketIndex lp, rightBracketIndex lp)) loops)
 
 printPairs :: Int -> [LoopPair] -> String
 printPairs index loops =
