@@ -62,14 +62,6 @@ execBFCode state =
     if cmdIndex state == length (program state) then
         putStrLn "\nDone."
     else if currCmd state == ',' then
-        {-do
-            input <- getLine
-            let inputInt :: Int; inputInt = maybe 0 id $ readMaybe input
-            let newState = state    { cmdIndex =    (cmdIndex state + 1)
-                                    , memory =      (fst $ splitAt (pointer state) (memory state)) 
-                                                        ++ [ inputInt ]
-                                                            ++ (snd $ splitAt ((pointer state) + 1) (memory state)) }
-            execBFCode newState-}
         do
             input <- getLine
             execBFCode (state   { cmdIndex =    (cmdIndex state + 1)
