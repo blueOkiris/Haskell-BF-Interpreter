@@ -64,16 +64,15 @@ execBFCode state =
     else if currCmd state == ',' then
         do
             input <- getLine
-            let inputInt :: Int; inputInt = maybe 0 id $! readMaybe input
+            let inputInt :: Int; inputInt = maybe 0 id $ readMaybe input
             let newState = state    { cmdIndex =    (cmdIndex state + 1)
                                     , memory =      (fst $ splitAt (pointer state) (memory state)) 
                                                         ++ [ inputInt ]
                                                             ++ (snd $ splitAt ((pointer state) + 1) (memory state)) }
-
             execBFCode newState
     else if currCmd state == '.' then
         do
-            putStr $ show $ currMem state
+            id $! putStr $ show $ currMem state
             execBFCode $ state { cmdIndex = (cmdIndex state + 1) }
     else
         execBFCode $ intCmdNoIO state
