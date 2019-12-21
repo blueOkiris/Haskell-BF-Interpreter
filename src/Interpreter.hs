@@ -72,7 +72,7 @@ execBFCode state =
             execBFCode newState
     else if currCmd state == '.' then
         do
-            id $! putStr $ show $ currMem state
+            putStr $ show $ currMem state
             execBFCode $ state { cmdIndex = (cmdIndex state + 1) }
     else
         execBFCode $ intCmdNoIO state
