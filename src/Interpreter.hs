@@ -70,7 +70,7 @@ execBFCode state =
                                         ++ (snd $ splitAt ((pointer state) + 1) (memory state)) } )
     else if currCmd state == '.' then
         do
-            putStr $ show $ currMem state
+            putStr $ (show $ currMem state) ++ " "
             execBFCode $ state { cmdIndex = (cmdIndex state + 1) }
     else
         execBFCode $ intCmdNoIO state
