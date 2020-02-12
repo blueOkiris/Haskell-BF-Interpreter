@@ -4,17 +4,17 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2d2ff0d53eb3be101f8df82999bef87da1ceb318f2028d415ccd6f0de9928d08
+-- hash: e5b81ac63e954b421b29cbb09ca0bd6abb273aa86fa238939060a6862f5a2b61
 
 name:           HaskellBFInterpreter
-version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/HaskellBFInterpreter#readme>
-homepage:       https://github.com/githubuser/HaskellBFInterpreter#readme
-bug-reports:    https://github.com/githubuser/HaskellBFInterpreter/issues
+version:        1.2
+description:    Please see the README on GitHub at <https://github.com/blueOkiris/Haskell-BF-Interpreter>
+homepage:       https://github.com/blueOkiris/Haskell-BF-Interpreter#readme
+bug-reports:    https://github.com/blueOkiris/Haskell-BF-Interpreter/issues
 author:         Author name here
-maintainer:     example@example.com
-copyright:      2019 Author name here
-license:        BSD3
+maintainer:     dylantdmt@gmail.com
+copyright:      2020 Dylan Turner
+license:        GNU3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/HaskellBFInterpreter
+  location: https://github.com/blueOkiris/Haskell-BF-Interpreter
 
 library
   exposed-modules:
@@ -39,7 +39,7 @@ library
     , bytestring
   default-language: Haskell2010
 
-executable bfih
+executable hbfi
   main-is: Main.hs
   other-modules:
       Paths_HaskellBFInterpreter

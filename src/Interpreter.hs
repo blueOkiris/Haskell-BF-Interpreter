@@ -11,69 +11,72 @@ import System.IO.Unsafe(unsafePerformIO)
 import Loop(LoopPair(..), getLoopPairs, printPairs)
 import BFCmd(StateMachine(..), currMem, currCmd, showState)
 
+-- Replace list[index] with newItem
+lreplace :: Int -> [a] -> a -> [a]
+lreplace index list newItem =
+    (fst $ splitAt index list) ++ [ newItem ] ++ (snd $ splitAt (index + 1) list)
+
+-- Ternary operator -> bool ? yes :? no
+data Cond a = a :? a
+
+infixl 0 ?
+infixl 1 :?
+
+(?) :: Bool -> Cond a -> a
+True  ? (x :? _) = x
+False ? (_ :? y) = y
+
+-- When the value doesn't require an IO operation (+, -, >, <, [, ])
 intCmdNoIO :: StateMachine -> StateMachine
-intCmdNoIO state =
-    if currCmd state == '+' then
-        -- Replace the state's currMem by currMem + 1
-        state   { memory =      (fst $ splitAt (pointer state) (memory state)) 
-                                    ++ [ (currMem state) + 1 ] 
-                                        ++ (snd $ splitAt ((pointer state) + 1) (memory state))
+intCmdNoIO state
+    | currCmd state == '+' =
+        state   { memory =      lreplace memIndex memList (currMemValue + 1)                    -- Replace the state's currMem by currMem + 1
                 , cmdIndex =    (cmdIndex state) + 1 }
-    else if currCmd state == '-' then
-        -- Replace the state's currMem by currMem - 1
-        state   { memory =      (fst $ splitAt (pointer state) (memory state)) 
-                                    ++ [ (currMem state) - 1 ] 
-                                        ++ (snd $ splitAt ((pointer state) + 1) (memory state))
+    | currCmd state == '-' =
+        state   { memory =      lreplace memIndex memList (currMemValue - 1)                    -- Replace the state's currMem by currMem - 1
                 , cmdIndex =    (cmdIndex state) + 1 }
-    else if currCmd state == '>' then
-        -- Replace the state's currMem by currMem - 1
-        state   { pointer =     (pointer state) + 1
-                , memory =      if ((pointer state) + 1) >= (length (memory state)) then
-                                    (memory state) ++ [ 0 ]
-                                else
-                                    (memory state) 
+    | currCmd state == '>' =
+        state   { pointer =     memIndex + 1
+                , memory =      memIndex + 1 >= length memList ? memList ++ [ 0 ] :? memList    -- Move the pointer over to the right. If not big enough, add 0 to end
                 , cmdIndex =    (cmdIndex state) + 1 }
-    else if currCmd state == '<' then
-        -- Replace the state's currMem by currMem - 1
-        state   { pointer =     if (pointer state) > 0 then
-                                    (pointer state) - 1
-                                else
-                                    pointer state
+    | currCmd state == '<' =
+        state   { pointer =     memIndex > 0 ? memIndex - 1 :? memIndex                         -- Move the pointer to the left until at index 0
                 , cmdIndex =    (cmdIndex state) + 1 }
-    else if currCmd state == '[' then
+    | currCmd state == '[' =
         state   { cmdIndex =    if (currMem state) == 0 then
-                                    -- Jump PAST matching right bracket
-                                    1 + (rightBracketIndex $ head $
+                                    1 + (rightBracketIndex $ head $                             -- Jump PAST matching right bracket
                                         filter (\loop -> (leftBracketIndex loop) == (cmdIndex state)) (loops state))
                                 else
                                     (cmdIndex state) + 1 }
-    else if currCmd state == ']' then
+    | currCmd state == ']' =
         state   { cmdIndex =    if (currMem state) /= 0 then
-                                    -- Jump BACK TO matching left bracket
-                                    leftBracketIndex $ head $
+                                    leftBracketIndex $ head $                                   -- Jump BACK TO matching left bracket
                                         filter (\loop -> (rightBracketIndex loop) == (cmdIndex state)) (loops state)
                                 else
                                     (cmdIndex state) + 1 }
-    else
-        state   { cmdIndex =    (cmdIndex state) + 1 }
+    | otherwise = state   { cmdIndex = (cmdIndex state) + 1 }
+    where
+        memIndex =      pointer state
+        memList =       memory  state
+        currMemValue =  currMem state
 
 execBFCode :: StateMachine -> IO()
-execBFCode state =
-    if cmdIndex state == length (program state) then
-        return ()
-    else if currCmd state == ',' then
+execBFCode state
+    | cmdIndex state == length (program state) = return ()
+    | currCmd state == ',' =
         do
             input <- getLine
             execBFCode (state   { cmdIndex =    (cmdIndex state + 1)
-                                , memory =      (fst $ splitAt (pointer state) (memory state)) 
-                                    ++ [ (maybe 0 id $ readMaybe input) ]
-                                        ++ (snd $ splitAt ((pointer state) + 1) (memory state)) } )
-    else if currCmd state == '.' then
+                                , memory =      lreplace memIndex memList (maybe 0 id $ readMaybe input) })
+    | currCmd state == '.' =
         do
             putStr $ (show $ currMem state) ++ " "
             execBFCode $ state { cmdIndex = (cmdIndex state + 1) }
-    else
-        execBFCode $ intCmdNoIO state
+    | otherwise = execBFCode $ intCmdNoIO state
+    where
+        memIndex =      pointer state
+        memList =       memory  state
+        currMemValue =  currMem state
 
 runBFInterpreter :: ByteString -> IO()
 runBFInterpreter bfFile =
