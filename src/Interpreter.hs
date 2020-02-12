@@ -10,21 +10,7 @@ import System.IO.Unsafe(unsafePerformIO)
 
 import Loop(LoopPair(..), getLoopPairs, printPairs)
 import BFCmd(StateMachine(..), currMem, currCmd, showState)
-
--- Replace list[index] with newItem
-lreplace :: Int -> [a] -> a -> [a]
-lreplace index list newItem =
-    (fst $ splitAt index list) ++ [ newItem ] ++ (snd $ splitAt (index + 1) list)
-
--- Ternary operator -> bool ? yes :? no
-data Cond a = a :? a
-
-infixl 0 ?
-infixl 1 :?
-
-(?) :: Bool -> Cond a -> a
-True  ? (x :? _) = x
-False ? (_ :? y) = y
+import Lib
 
 -- When the value doesn't require an IO operation (+, -, >, <, [, ])
 intCmdNoIO :: StateMachine -> StateMachine
