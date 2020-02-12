@@ -45,6 +45,7 @@ intCmdNoIO state
         memIndex =      pointer state
         memList =       memory  state
         currMemValue =  currMem state
+        cmd =           currCmd state
 
 execBFCode :: StateMachine -> IO()
 execBFCode state
