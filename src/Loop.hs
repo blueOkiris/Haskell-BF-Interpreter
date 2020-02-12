@@ -45,7 +45,6 @@ getRightPairs program index loopIndex pairs
 
 getLoopPairs :: [Char] -> [LoopPair]
 getLoopPairs program =
-    --trace (printPairs 0 leftPairs)
     rightPairs
     where
         leftPairs = getLeftPairs 0 program
