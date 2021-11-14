@@ -15,15 +15,11 @@ import Parse(Parser(..), Stmt(..), getStmts, program)
 data State = State  { tape      :: [Int]
                     , pointer   :: Int }
 
-interpret :: String -> IO()
-interpret code = do
-    --putStrLn . show code
-    let (prog, leftOver) = fromJust $ runParser program code
-    --putStrLn . show prog
-    final <- execute (State { tape = repeat 0, pointer = 0 }) (getStmts prog)
-    --putStrLn $ "\nFinal Tape: " ++ (show $ take 100 $ tape final) ++ "\n"
-    putStrLn ""
-
+{-
+ - "Double Apply"
+ - Instead of (tape state) !! (pointer state),
+ - do dapp tape !! pointer state
+ -}
 dapp :: (a -> b) -> (b -> c -> d) -> (a -> c) -> a -> d
 dapp left op right val =
     op (left val) (right val)
@@ -64,5 +60,7 @@ main = do
     if length args /= 1 then
         putStrLn "No filename provided!"
     else do
-        bfFile <- readFile $ args !! 0
-        interpret bfFile
+        code <- readFile $ args !! 0
+        let (prog, leftOver) = fromJust $ runParser program code
+        execute (State { tape = repeat 0, pointer = 0 }) (getStmts prog)
+        putStrLn ""
