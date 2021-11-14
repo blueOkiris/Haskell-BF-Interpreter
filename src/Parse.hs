@@ -76,7 +76,7 @@ instance Show Stmt where
 
 char :: Char -> Parser Stmt
 skip :: Parser Char
-skipSome :: Parser [Char]
+skipMany :: Parser [Char]
 memOp :: Parser Stmt
 ptrOp :: Parser Stmt
 ioOp :: Parser Stmt
@@ -96,13 +96,19 @@ skip = Parser parser
         parser (x:xs)
             | not (x `elem` "+-<>.,[]") = Just (x, xs)
             | otherwise = Nothing
-skipSome = some skip
+skipMany = many skip
 
 memOp = char '+' <|> char '-'
-ptrOp = char '<' <|> char '-'
+ptrOp = char '<' <|> char '>'
 ioOp = char '.' <|> char ','
-loop =  (Loop <$> ((\x y -> [ x, y ]) <$> char '[' <*> char ']'))
-    <|> (Loop <$> ((\x y z -> x:y ++ [ z ]) <$> char '[' <*> many stmt <*> char ']'))
-stmt = (skipSome *> stmt) <|> (memOp <|> ptrOp <|> ioOp <|> loop)
+loop = do
+    lb <- char '['
+    stmts <- many $ skipMany *> stmt
+    rb <- skipMany *> char ']'
+    if length stmts < 1
+        then return $ Loop [ lb, rb ]
+        else return $ Loop (lb:stmts ++ [ rb ])
 
-program = many stmt
+stmt = memOp <|> ptrOp <|> ioOp <|> loop
+
+program = many $ skipMany *> stmt
