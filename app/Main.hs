@@ -34,16 +34,20 @@ setCell state newVal =
 execute :: State -> [Stmt] -> IO State
 execute state [] = do return state
 execute state ((IoOp c):stmts)
+    -- Print
     | c == '.' = do
         putStr $ (show $ dapp tape (!!) pointer state) ++ " "
         execute state stmts
+    -- Input
     | otherwise = do -- ','
         input <- getLine
         let newState = setCell state $ fromMaybe 0 $ readMaybe input
         execute newState stmts
 execute state ((Loop lb subStmts rb):stmts)
+    -- Jump past ] if cell at pointer is 0
     | dapp tape (!!) pointer state == 0 = execute state stmts
     | otherwise = do
+        -- Run the inner statements (including other loops)
         newState <- execute state subStmts
         if dapp tape (!!) pointer newState /= 0 then
             -- Repeat loop steps
