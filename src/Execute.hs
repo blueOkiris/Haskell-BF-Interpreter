@@ -44,6 +44,18 @@ execute state ((IoOp c):stmts)
         input <- getLine
         let newState = setCell state $ fromMaybe 0 $ readMaybe input
         execute newState stmts
+-- Add or subtract the memory in the current cell
+execute state ((MemOp c):stmts) =
+    let op = if c == '+' then (+) else (-)
+        curVal = dapp tape (!!) pointer state
+        newState = setCell state (op curVal 1) in
+        execute newState stmts
+-- Move the pointer
+execute state ((PtrOp c):stmts) =
+    let op = if c == '>' then (+) else (-)
+        newState = state { pointer = op (pointer state) 1 } in
+        execute newState stmts
+-- Handle loop structures
 execute state ((Loop lb subStmts rb):stmts)
     -- Jump past ] if cell at pointer is 0
     | dapp tape (!!) pointer state == 0 = execute state stmts
@@ -56,4 +68,3 @@ execute state ((Loop lb subStmts rb):stmts)
         else
             -- Move on
             execute newState stmts
-execute state _ = do return state
