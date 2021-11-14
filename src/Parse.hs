@@ -7,14 +7,15 @@
 
 -- First, what is a parser?
 
-module Parse( Parser(..), Alternative(..)
-            , program, stmt, loop, memOp, ptrOp, ioOp) where
+module Parse( Parser(..), Stmt(..), Program(..)
+            , getStmts, program) where
 
 -- Well, it's a function
-newtype Parser a = Parser { runParser :: String -> Maybe (a, String) }
+newtype Parser a =
+    Parser { runParser :: String -> Maybe (a, String) }
 
 instance Functor Parser where
-    fmap f (Parser x) = Parser $ \s -> do   -- Make use of Maybe monad
+    fmap f (Parser x) = Parser $ \s -> do   -- Make use of Maybe
         (x', s') <- x s                     -- Run parser
         return (f x', s')
 
@@ -29,8 +30,8 @@ instance Applicative Parser where
 -- Get stuff from the parser
 instance Monad Parser where
     (Parser x) >>= f = Parser $ \s -> do
-        (x', s') <- x s                     -- Get value from og parser val
-        runParser (f x') s'                 -- Then just run it and get maybe
+        (x', s') <- x s                     -- Get val from og
+        runParser (f x') s'                 -- Run it and get maybe
     fail _ = Parser $ \s -> Nothing
 
 -- Or, some, and many for our parsers
@@ -68,13 +69,33 @@ instance Alternative Parser where
 - <loop> ::= '[' { <stmt> } ']'
 -}
 
-data Stmt = Op Char | Loop [Stmt]
+data Stmt = MemOp Char  | PtrOp Char | IoOp Char
+          | Loop Char [Stmt] Char
+data Program = Program [Stmt]
+getStmts :: Program -> [Stmt]
+getStmts (Program stmts) = stmts
 
+stmtsToStr :: [Stmt] -> Int -> String
 instance Show Stmt where
-    show (Op x) = "Char " ++ show x
-    show (Loop l) = "Loop " ++ show l
+    show (MemOp x) = "MemOp " ++ show x
+    show (PtrOp x) = "PtrOp " ++ show x
+    show (IoOp x) = "IoOp " ++ show x
+    show (Loop lb stmts rb) =
+        "Loop [\n" ++ (stmtsToStr stmts 1) ++"\n]"
+stmtsToStr [] _ = ""
+stmtsToStr ((Loop _ substmts _):stmts) indent =
+    let tabs = foldl1 (++) (take indent $ repeat "\t") in
+    tabs ++ "Loop [\n" ++ (stmtsToStr substmts (indent + 1))
+        ++ tabs ++ "]"
+stmtsToStr (stmt:stmts) indent =
+    let tabs = foldl1 (++) (take indent $ repeat "\t") in
+    tabs ++ (show stmt) ++ "\n" ++ stmtsToStr stmts indent
 
-char :: Char -> Parser Stmt
+instance Show Program where
+    show (Program []) = ""
+    show (Program (x:xs)) = show x ++ "\n" ++ (show $ Program xs)
+
+char :: Char -> Parser Char
 skip :: Parser Char
 skipMany :: Parser [Char]
 memOp :: Parser Stmt
@@ -82,13 +103,13 @@ ptrOp :: Parser Stmt
 ioOp :: Parser Stmt
 loop :: Parser Stmt
 stmt :: Parser Stmt
-program :: Parser [Stmt]
+program :: Parser Program
 
 char c = Parser parser
     where
         parser [] = Nothing
         parser (x:xs)
-            | x == c    = Just (Op c, xs)
+            | x == c    = Just (c, xs)
             | otherwise = Nothing
 skip = Parser parser
     where
@@ -98,17 +119,15 @@ skip = Parser parser
             | otherwise = Nothing
 skipMany = many skip
 
-memOp = char '+' <|> char '-'
-ptrOp = char '<' <|> char '>'
-ioOp = char '.' <|> char ','
+memOp = MemOp <$> (char '+' <|> char '-')
+ptrOp = PtrOp <$> (char '<' <|> char '>')
+ioOp = IoOp <$> char '.' <|> char ','
 loop = do
     lb <- char '['
     stmts <- many $ skipMany *> stmt
     rb <- skipMany *> char ']'
-    if length stmts < 1
-        then return $ Loop [ lb, rb ]
-        else return $ Loop (lb:stmts ++ [ rb ])
+    return $ Loop lb stmts rb
 
 stmt = memOp <|> ptrOp <|> ioOp <|> loop
 
-program = many $ skipMany *> stmt
+program = Program <$> (many $ skipMany *> stmt)
