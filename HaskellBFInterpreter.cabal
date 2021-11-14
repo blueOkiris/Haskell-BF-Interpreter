@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7f330568d01775ebb99b8b61105ab5f26bf8299de5c117b33449988bd4f63e8d
+-- hash: f505c35dfdd22437ba895afdca0b7f1a9d044f6df5129c8bdbe035be36b35025
 
 name:           HaskellBFInterpreter
 version:        1.2
@@ -31,6 +31,7 @@ library
       Interpreter
       Lib
       Loop
+      Parse
   other-modules:
       Paths_HaskellBFInterpreter
   hs-source-dirs:

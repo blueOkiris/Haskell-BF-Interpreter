@@ -1,3 +1,6 @@
+-- Author: Dylan Turner
+-- Description: Helper functions for use throughout the program
+
 module Lib(lreplace, Cond(..), (?), lremove) where
 
 -- Replace list[index] with newItem

@@ -1,3 +1,6 @@
+-- Author: Dylan Turner
+-- Description: Main part of bf interpreter
+
 module Interpreter(runBFInterpreter, execBFCode) where
 
 import Data.ByteString(ByteString)
