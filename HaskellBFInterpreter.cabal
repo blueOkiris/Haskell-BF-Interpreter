@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b4f58cf1498da9df06604f0ffe122386734bfdc66adcfe9ecb54c014d749937c
+-- hash: 08bb977bf357d2f127aecc0f343a3d3e687b76d193e5ec31c3a8e39996452b28
 
 name:           HaskellBFInterpreter
 version:        1.2
@@ -27,11 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      BFCmd
       Execute
-      Interpreter
-      Lib
-      Loop
       Parse
   other-modules:
       Paths_HaskellBFInterpreter
