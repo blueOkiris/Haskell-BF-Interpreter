@@ -21,7 +21,8 @@ interpret code = do
     let (prog, leftOver) = fromJust $ runParser program code
     --putStrLn . show prog
     final <- execute (State { tape = repeat 0, pointer = 0 }) (getStmts prog)
-    putStrLn $ "\nFinal Tape: " ++ (show $ take 100 $ tape final) ++ "\n"
+    --putStrLn $ "\nFinal Tape: " ++ (show $ take 100 $ tape final) ++ "\n"
+    putStrLn ""
 
 dapp :: (a -> b) -> (b -> c -> d) -> (a -> c) -> a -> d
 dapp left op right val =
