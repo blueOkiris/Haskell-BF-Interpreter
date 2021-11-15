@@ -15,9 +15,9 @@ newtype Parser a =
     Parser { runParser :: String -> Maybe (a, String) }
 
 instance Functor Parser where
-    fmap f (Parser x) = Parser $ \s -> do   -- Make use of Maybe
-        (x', s') <- x s                     -- Run parser
-        return (f x', s')
+    fmap func (Parser x) = Parser $ \str -> do
+        (x', str') <- x str                 -- Unwrap from maybe
+        return (func x', str')
 
 -- Chain parsers
 instance Applicative Parser where
@@ -70,30 +70,11 @@ instance Alternative Parser where
 -}
 
 data Stmt = MemOp Char  | PtrOp Char | IoOp Char
-          | Loop Char [Stmt] Char
-data Program = Program [Stmt]
+          | Loop Char [Stmt] Char deriving Show
+data Program = Program [Stmt] deriving Show
+
 getStmts :: Program -> [Stmt]
 getStmts (Program stmts) = stmts
-
-stmtsToStr :: [Stmt] -> Int -> String
-instance Show Stmt where
-    show (MemOp x) = "MemOp " ++ show x
-    show (PtrOp x) = "PtrOp " ++ show x
-    show (IoOp x) = "IoOp " ++ show x
-    show (Loop lb stmts rb) =
-        "Loop [\n" ++ (stmtsToStr stmts 1) ++"\n]"
-stmtsToStr [] _ = ""
-stmtsToStr ((Loop _ substmts _):stmts) indent =
-    let tabs = foldl1 (++) (take indent $ repeat "\t") in
-    tabs ++ "Loop [\n" ++ (stmtsToStr substmts (indent + 1))
-        ++ tabs ++ "]"
-stmtsToStr (stmt:stmts) indent =
-    let tabs = foldl1 (++) (take indent $ repeat "\t") in
-    tabs ++ (show stmt) ++ "\n" ++ stmtsToStr stmts indent
-
-instance Show Program where
-    show (Program []) = ""
-    show (Program (x:xs)) = show x ++ "\n" ++ (show $ Program xs)
 
 char :: Char -> Parser Char
 skip :: Parser Char
@@ -105,18 +86,18 @@ loop :: Parser Stmt
 stmt :: Parser Stmt
 program :: Parser Program
 
-char c = Parser parser
-    where
-        parser [] = Nothing
+char c =
+    let parser [] = Nothing
         parser (x:xs)
             | x == c    = Just (c, xs)
-            | otherwise = Nothing
-skip = Parser parser
-    where
-        parser [] = Nothing
+            | otherwise = Nothing in
+    Parser parser
+skip =
+    let parser [] = Nothing
         parser (x:xs)
             | not (x `elem` "+-<>.,[]") = Just (x, xs)
-            | otherwise = Nothing
+            | otherwise = Nothing in
+    Parser parser
 skipMany = many skip
 
 memOp = MemOp <$> (char '+' <|> char '-')
