@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 08bb977bf357d2f127aecc0f343a3d3e687b76d193e5ec31c3a8e39996452b28
+-- hash: 872bd1f8da472fc7f115132ad5bc96b28a747e76af4705ebbf5f5c1138cb1170
 
 name:           HaskellBFInterpreter
 version:        1.2
@@ -35,7 +35,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
-    , bytestring
+    , data-aviary
   default-language: Haskell2010
 
 executable hbfi
@@ -49,4 +49,5 @@ executable hbfi
       HaskellBFInterpreter
     , base >=4.7 && <5
     , bytestring
+    , data-aviary
   default-language: Haskell2010

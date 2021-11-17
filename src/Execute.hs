@@ -7,21 +7,13 @@ module Execute(State(..), execute) where
 
 import Data.Maybe(fromMaybe)
 import Text.Read(readMaybe)
+import Data.Aviary.Birds(phoenix)
 
 import Parse(Stmt(..))
 
 -- Machine State
 data State = State  { tape      :: [Int]
                     , pointer   :: Int }
-
-{-
- - "Double Apply"
- - Instead of (tape state) !! (pointer state),
- - do dapp tape !! pointer state
- -}
-dapp :: (a -> b) -> (b -> c -> d) -> (a -> c) -> a -> d
-dapp left op right val =
-    op (left val) (right val)
 
 -- Sets the current cell of a state to a new value
 setCell :: State -> Int -> State
@@ -37,7 +29,7 @@ execute state [] = do return state
 execute state ((IoOp c):stmts)
     -- Print
     | c == '.' = do
-        putStr $ (show $ dapp tape (!!) pointer state) ++ " "
+        putStr $ (show $ phoenix (!!) tape pointer state) ++ " "
         execute state stmts
     -- Input
     | otherwise = do -- ','
@@ -47,7 +39,7 @@ execute state ((IoOp c):stmts)
 -- Add or subtract the memory in the current cell
 execute state ((MemOp c):stmts) =
     let op = if c == '+' then (+) else (-)
-        curVal = dapp tape (!!) pointer state
+        curVal = phoenix (!!) tape pointer state
         newState = setCell state (op curVal 1) in
         execute newState stmts
 -- Move the pointer
@@ -58,11 +50,11 @@ execute state ((PtrOp c):stmts) =
 -- Handle loop structures
 execute state ((Loop lb subStmts rb):stmts)
     -- Jump past ] if cell at pointer is 0
-    | dapp tape (!!) pointer state == 0 = execute state stmts
+    | phoenix (!!) tape pointer state == 0 = execute state stmts
     | otherwise = do
         -- Run the inner statements (including other loops)
         newState <- execute state subStmts
-        if dapp tape (!!) pointer newState /= 0 then
+        if phoenix (!!) tape pointer newState /= 0 then
             -- Repeat loop steps
             execute newState ((Loop lb subStmts rb):stmts)
         else
