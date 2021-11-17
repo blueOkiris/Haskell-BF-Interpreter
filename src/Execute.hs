@@ -21,7 +21,7 @@ setCell state newVal =
     let ptr = pointer state
         tp = tape state
         (pred, _:succ) = splitAt ptr tp in
-    state { tape = pred ++ [ newVal ] ++ succ }
+    state { tape = pred ++ newVal:succ }
 
 -- Execute parsed code
 execute :: State -> [Stmt] -> IO State
