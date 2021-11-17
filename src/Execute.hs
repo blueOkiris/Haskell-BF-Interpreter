@@ -41,12 +41,12 @@ execute state ((MemOp c):stmts) =
     let op = if c == '+' then (+) else (-)
         curVal = phoenix (!!) tape pointer state
         newState = setCell state (op curVal 1) in
-        execute newState stmts
+    execute newState stmts
 -- Move the pointer
 execute state ((PtrOp c):stmts) =
     let op = if c == '>' then (+) else (-)
         newState = state { pointer = op (pointer state) 1 } in
-        execute newState stmts
+    execute newState stmts
 -- Handle loop structures
 execute state ((Loop lb subStmts rb):stmts)
     -- Jump past ] if cell at pointer is 0
